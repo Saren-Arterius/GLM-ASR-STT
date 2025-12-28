@@ -74,12 +74,15 @@ class WhisperBackend(ASRBackend):
         merged_kwargs = self.generate_kwargs.copy()
         merged_kwargs.update({k: v for k, v in kwargs.items() if v is not None})
         
-        # Remove 'device' from kwargs as it's not a valid argument for generate()
-        # and is already handled by the pipeline
-        if "device" in merged_kwargs:
-            del merged_kwargs["device"]
-            
-        kwargs = {k: v for k, v in merged_kwargs.items() if v is not None}
+        # Whitelist allowed kwargs for Whisper generate
+        allowed_keys = {
+            "task", "language", "prompt_ids", "generation_config", 
+            "num_beams", "max_new_tokens", "min_new_tokens", "return_timestamps",
+            "temperature", "do_sample", "top_k", "top_p"
+        }
+        
+        kwargs = {k: v for k, v in merged_kwargs.items() if k in allowed_keys and v is not None}
+        
         # Pass generation_config explicitly to ensure it's used
         kwargs["generation_config"] = self.pipe.model.generation_config
         
