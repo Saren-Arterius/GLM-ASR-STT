@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# GLM-ASR-STT Setup and Launch Script
+# WTAKO-ASR-IME Setup and Launch Script
 
 # Ensure we are in a virtual environment
 if [ -z "$VIRTUAL_ENV" ]; then

@@ -172,6 +172,14 @@ class ASRClient:
                         print(f"OpenCC converted ({opencc_mode}): {text}")
                     except Exception as e:
                         print(f"OpenCC conversion error: {e}")
+
+                # Apply extra_replace if configured for the current backend
+                extra_replace = backend_config.get("extra_replace")
+                if extra_replace and isinstance(extra_replace, dict):
+                    for old, new in extra_replace.items():
+                        text = text.replace(old, new)
+                    print(f"Extra replace applied: {text}")
+
                 return text
             else:
                 print(f"ASR Error: {response.status_code} - {response.text}")

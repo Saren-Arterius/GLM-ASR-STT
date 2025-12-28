@@ -1,5 +1,5 @@
 [project]
-name = "glm-asr-stt"
+name = "wtako-asr-ime"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -52,6 +52,8 @@ dependencies = [
     "scipy==1.16.3",
     "setuptools==80.9.0",
     "shellingham==1.5.4",
+    "sherpa-onnx==1.12.20",
+    "sherpa-onnx-core==1.12.20",
     "silero-vad>=6.2.0",
     "sounddevice==0.5.3",
     "soundfile==0.13.1",
