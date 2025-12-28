@@ -1,0 +1,17 @@
+{
+    "audio_devices": [
+        "C615",
+        "HD Webcam",
+        "HD Camera",
+        "Webcam",
+        "USB Audio"
+    ],
+    "sound_up": "assets/deck_ui_slider_up.wav",
+    "sound_down": "assets/deck_ui_slider_down.wav",
+    "socket_path": "/tmp/glm_asr_keyboard.sock",
+    "default_asr_server": "http://localhost:8000",
+    "use_local_server": true,
+    "hotkey": "f12",
+    "system_prompt": "Transcribe the following audio. Preferred language: Cantonese (\u7cb5\u8a9e).",
+    "disable_log": true
+}
