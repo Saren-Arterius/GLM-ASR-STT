@@ -331,12 +331,26 @@ class ASRClient:
         # Start keyboard listener
         self.start_keyboard_subprocess()
         
-        # Start audio input stream
+        # Start audio input stream management
         CHUNK_SIZE = int(self.input_sample_rate * 32 / 1000)
         try:
-            with sd.InputStream(device=self.input_device, samplerate=self.input_sample_rate, channels=self.input_channels, callback=self.audio_callback, blocksize=CHUNK_SIZE):
-                while not self.stop_event.is_set():
-                    time.sleep(1)
+            while not self.stop_event.is_set():
+                if self.is_recording_dict["active"] or self.is_recording_dict["internal_active"]:
+                    print("Opening InputStream...")
+                    try:
+                        with sd.InputStream(device=self.input_device, 
+                                          samplerate=self.input_sample_rate, 
+                                          channels=self.input_channels, 
+                                          callback=self.audio_callback, 
+                                          blocksize=CHUNK_SIZE):
+                            while not self.stop_event.is_set() and (self.is_recording_dict["active"] or self.is_recording_dict["internal_active"]):
+                                time.sleep(0.1)
+                        print("InputStream closed.")
+                    except Exception as e:
+                        print(f"Error in InputStream: {e}")
+                        time.sleep(1)
+                else:
+                    time.sleep(0.1)
         except KeyboardInterrupt:
             self.stop_event.set()
             print("\nExiting...")

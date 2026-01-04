@@ -802,29 +802,36 @@ class ASRGui(ctk.CTk):
 
             self.transition_to(AppState.LISTENING)
 
-            # Start audio input stream
+            # Start audio input stream management
             CHUNK_SIZE = int(self.client.input_sample_rate * 32 / 1000)
-            try:
-                stream = sd.InputStream(device=self.client.input_device, 
-                                    samplerate=self.client.input_sample_rate, 
-                                    channels=self.client.input_channels, 
-                                    callback=self.client.audio_callback, 
-                                    blocksize=CHUNK_SIZE)
-            except Exception as e:
-                self.transition_to(AppState.ERROR, self.i18n.get("audio_error", "Audio Error: {e}").format(e=e))
-                return
-
-            with stream:
-                while self.is_running and self.client and not self.client.stop_event.is_set():
-                    # Check if recording is active to update UI status
-                    if self.client.is_recording_dict.get("internal_active"):
-                        if self.app_state != AppState.RECORDING:
-                            self.transition_to(AppState.RECORDING)
-                    elif self.is_running:
-                        # Only set to listening if we weren't just processing
-                        if self.app_state == AppState.RECORDING:
-                             self.transition_to(AppState.LISTENING)
+            
+            while self.is_running and self.client and not self.client.stop_event.is_set():
+                # Check if recording is active to update UI status and manage stream
+                is_active = self.client.is_recording_dict.get("active") or self.client.is_recording_dict.get("internal_active")
+                
+                if is_active:
+                    if self.app_state != AppState.RECORDING:
+                        self.transition_to(AppState.RECORDING)
                     
+                    # Open stream only when active
+                    try:
+                        print("GUI: Opening InputStream...")
+                        with sd.InputStream(device=self.client.input_device, 
+                                          samplerate=self.client.input_sample_rate, 
+                                          channels=self.client.input_channels, 
+                                          callback=self.client.audio_callback, 
+                                          blocksize=CHUNK_SIZE):
+                            while self.is_running and self.client and not self.client.stop_event.is_set() and \
+                                  (self.client.is_recording_dict.get("active") or self.client.is_recording_dict.get("internal_active")):
+                                time.sleep(0.1)
+                        print("GUI: InputStream closed.")
+                    except Exception as e:
+                        print(f"GUI: Audio Error: {e}")
+                        self.transition_to(AppState.ERROR, self.i18n.get("audio_error", "Audio Error: {e}").format(e=e))
+                        break
+                else:
+                    if self.is_running and self.app_state == AppState.RECORDING:
+                        self.transition_to(AppState.LISTENING)
                     time.sleep(0.1)
         except Exception as e:
             print(f"Client error: {e}")
