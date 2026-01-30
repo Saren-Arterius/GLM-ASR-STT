@@ -38,5 +38,8 @@
     "language": "Language:",
     "whisper_device": "Whisper Device:",
     "whisper_language": "Whisper Language:",
-    "whisper_task": "Whisper Task:"
+    "whisper_task": "Whisper Task:",
+    "qwen_device": "Qwen Device:",
+    "qwen_language": "Qwen Language:",
+    "qwen_model": "Qwen Model:"
 }

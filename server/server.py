@@ -12,6 +12,7 @@ import argparse
 from backends.glm_backend import GLMBackend
 from backends.sensevoice_backend import SenseVoiceBackend
 from backends.whisper_backend import WhisperBackend
+from backends.qwen_asr_backend import QwenASRBackend
 
 class ASRServer:
     def __init__(self, port, backend_type="glm", config=None):
@@ -23,6 +24,8 @@ class ASRServer:
             self.backend = SenseVoiceBackend(config=self.config)
         elif backend_type == "whisper":
             self.backend = WhisperBackend(config=self.config)
+        elif backend_type == "qwen":
+            self.backend = QwenASRBackend(config=self.config)
         else:
             raise ValueError(f"Unknown backend type: {backend_type}")
 
@@ -131,7 +134,7 @@ class ASRServer:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ASR Server")
     parser.add_argument("--port", type=int, default=8000, help="Port to listen on")
-    parser.add_argument("--backend", type=str, default="glm", choices=["glm", "sensevoice", "sherpa-onnx/sense-voice", "whisper"], help="ASR backend to use")
+    parser.add_argument("--backend", type=str, default="glm", choices=["glm", "sensevoice", "sherpa-onnx/sense-voice", "whisper", "qwen"], help="ASR backend to use")
     parser.add_argument("--config", type=str, help="Path to config.json")
     parser.add_argument("--config-json", type=str, help="JSON string of config")
     args = parser.parse_args()

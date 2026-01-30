@@ -10,7 +10,7 @@
     "sound_down": "assets/deck_ui_slider_down.wav",
     "socket_path": "/tmp/glm_asr_keyboard.sock",
     "default_asr_server": "http://100.64.0.2:8000",
-    "asr_backend": "whisper",
+    "asr_backend": "qwen",
     "glm": {
         "system_prompt": "Transcribe the following Cantonese (粵語) audio."
     },
@@ -50,10 +50,17 @@
         "language": "yue",
         "task": "transcribe"
     },
+    "qwen_asr": {
+        "model_id": "Qwen/Qwen3-ASR-1.7B",
+        "device": "cuda",
+        "language": "Cantonese",
+        "max_inference_batch_size": 32,
+        "max_new_tokens": 256
+    },
     "use_local_server": true,
-    "hotkey": "f12",
+    "hotkey": "f9",
     "disable_log": false,
     "opencc_convert": "s2t",
-    "language": "zh_TW",
+    "language": "en",
     "gui_scale": 1.2
 }

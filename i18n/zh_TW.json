@@ -38,5 +38,8 @@
     "language": "語言:",
     "whisper_device": "Whisper 設備:",
     "whisper_language": "Whisper 語言:",
-    "whisper_task": "Whisper 任務:"
+    "whisper_task": "Whisper 任務:",
+    "qwen_device": "Qwen 設備:",
+    "qwen_language": "Qwen 語言:",
+    "qwen_model": "Qwen 模型:"
 }

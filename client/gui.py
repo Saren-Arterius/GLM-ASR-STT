@@ -194,7 +194,7 @@ class ASRGui(ctk.CTk):
         self.record_button.grid(row=0, column=1, padx=0, pady=0)
 
         ctk.CTkLabel(self.settings_frame, text=self.i18n.get("asr_backend", "ASR Backend:")).grid(row=4, column=0, padx=10, pady=5, sticky="w")
-        self.backend_option = ctk.CTkOptionMenu(self.settings_frame, values=["glm", "sherpa-onnx/sense-voice", "whisper"], command=self.on_backend_change)
+        self.backend_option = ctk.CTkOptionMenu(self.settings_frame, values=["glm", "sherpa-onnx/sense-voice", "whisper", "qwen"], command=self.on_backend_change)
         self.backend_option.grid(row=4, column=1, padx=10, pady=5, sticky="ew")
         
         current_backend = self.config.get("asr_backend", "glm")
@@ -248,19 +248,49 @@ class ASRGui(ctk.CTk):
         self.whisper_task_option.grid(row=2, column=1, padx=10, pady=5, sticky="ew")
         self.whisper_task_option.set(self.config.get("whisper", {}).get("task", "transcribe"))
 
+        # Qwen specific settings
+        self.qwen_frame = ctk.CTkFrame(self.settings_frame, fg_color="transparent")
+        self.qwen_frame.grid(row=5, column=0, columnspan=2, sticky="ew")
+        self.qwen_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(self.qwen_frame, text=self.i18n.get("qwen_device", "Device:")).grid(row=0, column=0, padx=10, pady=5, sticky="w")
+        self.qwen_device_option = ctk.CTkOptionMenu(self.qwen_frame, values=["cuda", "cpu"])
+        self.qwen_device_option.grid(row=0, column=1, padx=10, pady=5, sticky="ew")
+        self.qwen_device_option.set(self.config.get("qwen_asr", {}).get("device", "cuda"))
+
+        ctk.CTkLabel(self.qwen_frame, text=self.i18n.get("qwen_language", "Language:")).grid(row=1, column=0, padx=10, pady=5, sticky="w")
+        qwen_supported_langs = ["auto", "Chinese", "English", "Cantonese", "Arabic", "German", "French", "Spanish", "Portuguese", "Indonesian", "Italian", "Korean", "Russian", "Thai", "Vietnamese", "Japanese", "Turkish", "Hindi", "Malay", "Dutch", "Swedish", "Danish", "Finnish", "Polish", "Czech", "Filipino", "Persian", "Greek", "Romanian", "Hungarian", "Macedonian"]
+        self.qwen_lang_option = ctk.CTkOptionMenu(self.qwen_frame, values=qwen_supported_langs)
+        self.qwen_lang_option.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
+        self.qwen_lang_option.set(self.config.get("qwen_asr", {}).get("language", "auto"))
+
+        ctk.CTkLabel(self.qwen_frame, text=self.i18n.get("qwen_model", "Model:")).grid(row=2, column=0, padx=10, pady=5, sticky="w")
+        self.qwen_model_option = ctk.CTkOptionMenu(self.qwen_frame, values=["Qwen/Qwen3-ASR-1.7B", "Qwen/Qwen3-ASR-0.6B"])
+        self.qwen_model_option.grid(row=2, column=1, padx=10, pady=5, sticky="ew")
+        self.qwen_model_option.set(self.config.get("qwen_asr", {}).get("model_id", "Qwen/Qwen3-ASR-1.7B"))
+
         if self.backend_option.get() == "glm":
             self.sensevoice_frame.grid_remove()
             self.whisper_frame.grid_remove()
+            self.qwen_frame.grid_remove()
         elif self.backend_option.get() == "whisper":
             self.system_prompt_label.grid_remove()
             self.system_prompt_entry.grid_remove()
             self.sensevoice_frame.grid_remove()
             self.whisper_frame.grid()
+            self.qwen_frame.grid_remove()
+        elif self.backend_option.get() == "qwen":
+            self.system_prompt_label.grid_remove()
+            self.system_prompt_entry.grid_remove()
+            self.sensevoice_frame.grid_remove()
+            self.whisper_frame.grid_remove()
+            self.qwen_frame.grid()
         else:
             self.system_prompt_label.grid_remove()
             self.system_prompt_entry.grid_remove()
             self.sensevoice_frame.grid()
             self.whisper_frame.grid_remove()
+            self.qwen_frame.grid_remove()
 
         self.disable_log_var = ctk.BooleanVar(value=self.config.get("disable_log", False))
         self.disable_log_checkbox = ctk.CTkCheckBox(self.settings_frame, text=self.i18n.get("disable_log", "Disable Transcribe Log"), variable=self.disable_log_var)
@@ -308,6 +338,7 @@ class ASRGui(ctk.CTk):
             self.system_prompt_entry.grid_remove()
             self.sensevoice_frame.grid_remove()
             self.whisper_frame.grid_remove()
+            self.qwen_frame.grid_remove()
             return
 
         if backend == "glm":
@@ -315,16 +346,25 @@ class ASRGui(ctk.CTk):
             self.system_prompt_entry.grid()
             self.sensevoice_frame.grid_remove()
             self.whisper_frame.grid_remove()
+            self.qwen_frame.grid_remove()
         elif backend == "whisper":
             self.system_prompt_label.grid_remove()
             self.system_prompt_entry.grid_remove()
             self.sensevoice_frame.grid_remove()
             self.whisper_frame.grid()
+            self.qwen_frame.grid_remove()
+        elif backend == "qwen":
+            self.system_prompt_label.grid_remove()
+            self.system_prompt_entry.grid_remove()
+            self.sensevoice_frame.grid_remove()
+            self.whisper_frame.grid_remove()
+            self.qwen_frame.grid()
         else:
             self.system_prompt_label.grid_remove()
             self.system_prompt_entry.grid_remove()
             self.sensevoice_frame.grid()
             self.whisper_frame.grid_remove()
+            self.qwen_frame.grid_remove()
 
     def transition_to(self, new_state, error_msg=None):
         self.app_state = new_state
@@ -355,6 +395,9 @@ class ASRGui(ctk.CTk):
             self.whisper_device_option.configure(state=state)
             self.whisper_lang_option.configure(state=state)
             self.whisper_task_option.configure(state=state)
+            self.qwen_device_option.configure(state=state)
+            self.qwen_lang_option.configure(state=state)
+            self.qwen_model_option.configure(state=state)
             self.opencc_option.configure(state=state)
             self.disable_log_checkbox.configure(state=state)
             self.save_button.configure(state=state)
@@ -643,6 +686,12 @@ class ASRGui(ctk.CTk):
                 "language": self.whisper_lang_option.get(),
                 "task": self.whisper_task_option.get()
             }
+        elif backend == "qwen":
+            settings["qwen_asr"] = {
+                "device": self.qwen_device_option.get(),
+                "language": self.qwen_lang_option.get(),
+                "model_id": self.qwen_model_option.get()
+            }
         else: # sensevoice
             try:
                 threads = int(self.threads_entry.get())
@@ -718,6 +767,12 @@ class ASRGui(ctk.CTk):
         self.config["whisper"]["device"] = self.whisper_device_option.get()
         self.config["whisper"]["language"] = self.whisper_lang_option.get()
         self.config["whisper"]["task"] = self.whisper_task_option.get()
+
+        if "qwen_asr" not in self.config:
+            self.config["qwen_asr"] = {}
+        self.config["qwen_asr"]["device"] = self.qwen_device_option.get()
+        self.config["qwen_asr"]["language"] = self.qwen_lang_option.get()
+        self.config["qwen_asr"]["model_id"] = self.qwen_model_option.get()
 
         self.transition_to(AppState.STARTING)
 
