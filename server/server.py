@@ -5,6 +5,7 @@ import numpy as np
 import io
 import wave
 import json
+import opencc
 from email.parser import BytesParser
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import argparse
@@ -15,9 +16,11 @@ from backends.whisper_backend import WhisperBackend
 from backends.qwen_asr_backend import QwenASRBackend
 
 class ASRServer:
-    def __init__(self, port, backend_type="glm", config=None):
+    def __init__(self, port, backend_type="glm", config=None, enable_opencc=False, enable_extra_replace=False):
         self.port = port
         self.config = config or {}
+        self.enable_opencc = enable_opencc
+        self.enable_extra_replace = enable_extra_replace
         if backend_type == "glm":
             self.backend = GLMBackend(config=self.config)
         elif backend_type == "sensevoice" or backend_type == "sherpa-onnx/sense-voice":
@@ -117,6 +120,29 @@ class ASRServer:
                         pass
 
                 text = server_instance.transcribe(audio_np, sample_rate, system_prompt=system_prompt, **extra_kwargs)
+
+                # Apply OpenCC if enabled
+                if server_instance.enable_opencc:
+                    opencc_mode = server_instance.config.get("opencc_convert")
+                    if opencc_mode:
+                        try:
+                            converter = opencc.OpenCC(opencc_mode)
+                            text = converter.convert(text)
+                            print(f"Server OpenCC converted ({opencc_mode}): {text}")
+                        except Exception as e:
+                            print(f"Server OpenCC conversion error: {e}")
+
+                # Apply extra_replace if enabled
+                if server_instance.enable_extra_replace:
+                    backend = server_instance.config.get("asr_backend", "glm")
+                    if backend == "sherpa-onnx/sense-voice":
+                        backend = "sensevoice"
+                    backend_config = server_instance.config.get(backend, {})
+                    extra_replace = backend_config.get("extra_replace")
+                    if extra_replace and isinstance(extra_replace, dict):
+                        for old, new in extra_replace.items():
+                            text = text.replace(old, new)
+                        print(f"Server Extra replace applied: {text}")
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'text/plain; charset=utf-8')
@@ -137,6 +163,8 @@ if __name__ == "__main__":
     parser.add_argument("--backend", type=str, default="glm", choices=["glm", "sensevoice", "sherpa-onnx/sense-voice", "whisper", "qwen"], help="ASR backend to use")
     parser.add_argument("--config", type=str, help="Path to config.json")
     parser.add_argument("--config-json", type=str, help="JSON string of config")
+    parser.add_argument("--enable-opencc", action="store_true", help="Enable OpenCC conversion on server side")
+    parser.add_argument("--enable-extra-replace", action="store_true", help="Enable extra replace on server side")
     args = parser.parse_args()
 
     config = {}
@@ -155,5 +183,11 @@ if __name__ == "__main__":
             with open(default_config, 'r') as f:
                 config = json.load(f)
 
-    server = ASRServer(args.port, backend_type=args.backend, config=config)
+    server = ASRServer(
+        args.port, 
+        backend_type=args.backend, 
+        config=config, 
+        enable_opencc=args.enable_opencc, 
+        enable_extra_replace=args.enable_extra_replace
+    )
     server.run()
